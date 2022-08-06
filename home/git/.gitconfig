@@ -1,0 +1,7 @@
+[core]
+	autocrlf = false
+	editor = vim
+	ignorecase = false
+[user]
+	email = 43483380+haxyier@users.noreply.github.com
+	name = haxyier
