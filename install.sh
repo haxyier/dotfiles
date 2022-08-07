@@ -1,7 +1,7 @@
 #! /bin/bash
 
 FONT_BOLD="\033[1m"
-COLOR_RED="\033[31m"
+# COLOR_RED="\033[31m"
 COLOR_YELLOW="\033[33m"
 COLOR_CYAN="\033[36m"
 OUTPUT_RESET="\033[0m"
@@ -24,14 +24,15 @@ warn() {
 setup_home() {
     section "Setup home directory..."
 
-    for dotfile in $(find $SCRIPT_DIR/home -type f); do
-        target="${HOME}/$(basename "${dotfile}")"
+    find "${SCRIPT_DIR}/home" -type f -print0 | while IFS= read -r -d '' file
+    do
+        target="${HOME}/$(basename "${file}")"
 
-        if [ -e "$target" ]; then
+        if [ -e "${target}" ]; then
             warn "${target}: already exists. Skipped."
         else
-            ln -s "${dotfile}" "${target}"
-            info "Created symlink: ${target} -> ${dotfile}"
+            ln -s "${file}" "${target}"
+            info "Created symlink: ${target} -> ${file}"
         fi
     done
 }
