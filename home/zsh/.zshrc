@@ -2,6 +2,8 @@
 export PATH=/opt/homebrew/opt/git/bin:$PATH:/opt/platform-tools
 export CLICOLOR=1
 export LSCOLORS=gxfxcxdxcxegedabagfxfx
+export LS_COLORS='di=36:ln=35:so=32:pi=33:ex=32:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=35:ow=35'
+
 
 ### Configure alias. ###
 alias lsa='ls -a'
@@ -11,6 +13,9 @@ alias lla='ls -ahl'
 
 ### Set zsh options. ###
 setopt correct
+setopt correct_all
+setopt nobeep
+setopt nohistbeep
 setopt nolistbeep
 
 
@@ -47,6 +52,9 @@ setopt list_types
 
 FPATH=~/.zsh:$FPATH
 autoload -Uz compinit && compinit
+
+zstyle ':completion:*' list-colors "${LS_COLORS}"
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' '+m:{A-Z}={a-z}' 
 
 
 ### Configure history. ###
