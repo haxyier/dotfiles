@@ -13,7 +13,6 @@ alias lla='ls -ahl'
 
 ### Set zsh options. ###
 setopt correct
-setopt correct_all
 setopt nobeep
 setopt nohistbeep
 setopt nolistbeep
