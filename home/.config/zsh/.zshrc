@@ -1,12 +1,13 @@
 ### Set environment variables. ###
-export PATH=/opt/homebrew/opt/git/bin:$PATH:/opt/platform-tools
+export PATH=/opt/homebrew/bin:$PATH:/opt/platform-tools
 export CLICOLOR=1
+export LESS="-iMq"
 export LSCOLORS=gxfxcxdxcxegedabagfxfx
 export LS_COLORS='di=36:ln=35:so=32:pi=33:ex=32:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=35:ow=35'
 
 
 ### Configure alias. ###
-alias lsa='ls -a'
+alias la='ls -a'
 alias ll='ls -hl'
 alias lla='ls -ahl'
 
@@ -48,6 +49,7 @@ setopt auto_list
 setopt auto_menu
 setopt list_packed
 setopt list_types
+setopt magic_equal_subst
 
 FPATH=~/.zsh:$FPATH
 autoload -Uz compinit && compinit
