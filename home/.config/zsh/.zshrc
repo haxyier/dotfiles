@@ -1,7 +1,7 @@
 ### Set environment variables. ###
 export PATH=/opt/homebrew/bin:$PATH:/opt/platform-tools
 export CLICOLOR=1
-export LESS="-iMq"
+export LESS="-FiMqRX"
 export LSCOLORS=gxfxcxdxcxegedabagfxfx
 export LS_COLORS='di=36:ln=35:so=32:pi=33:ex=32:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=35:ow=35'
 export XDG_CONFIG_HOME=$HOME/.config
