@@ -4,7 +4,7 @@ export CLICOLOR=1
 export LESS="-iMq"
 export LSCOLORS=gxfxcxdxcxegedabagfxfx
 export LS_COLORS='di=36:ln=35:so=32:pi=33:ex=32:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=35:ow=35'
-
+export XDG_CONFIG_HOME=$HOME/.config
 
 ### Configure alias. ###
 alias la='ls -a'
@@ -60,7 +60,7 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' '+m:{A-Z}={a-z}'
 
 ### Configure history. ###
 # command
-HISTFILE=~/.zsh_history
+HISTFILE=$XDG_CONFIG_HOME/zsh/.zsh_history
 HISTSIZE=1000
 SAVEHIST=100000
 setopt inc_append_history
