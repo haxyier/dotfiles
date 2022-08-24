@@ -7,6 +7,7 @@ COLOR_CYAN="\033[36m"
 OUTPUT_RESET="\033[0m"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+DEFAULT_BACKUP_DIR="${HOME}/dotfiles-backup_$(date +%Y%m%d%H%M%S)"
 
 
 section() {
@@ -67,6 +68,67 @@ parse_options() {
     set -- "${positional_params[@]}"
 }
 
+ensure_backup_dir() {
+    section "Ensure backup directory..."
+
+    if [ -z "${BACKUP_ENABLED}" ]; then
+        warn "Backup is disabled. Installation of existing config files will be skipped."
+        return 0
+    fi
+
+    backup_dir="${BACKUP_PATH:-$DEFAULT_BACKUP_DIR}"
+    local backup_base_dir
+    backup_base_dir="$(dirname "${backup_dir}")"
+
+    if [ ! -e "${backup_base_dir}" ]; then
+        error "${backup_base_dir} is not exist. No files changed."
+        exit 1
+    fi
+
+    if [ -e "${backup_dir}" ]; then
+        error "${backup_dir}: Already exists. No files changed."
+        exit 1
+    fi
+
+    mkdir -p "${backup_dir}" && info "Ensured backup directory: ${backup_dir}"
+}
+
+# If --backup or -b option is specified, move file to backup directory.
+# Args $1: file path to execute backup. 
+backup_file() {
+    if [ ! -e "$1" ]; then
+        return 0
+    fi
+
+    if [ -z "${BACKUP_ENABLED}" ]; then
+        return 1
+    fi
+
+    local backup_dst="${backup_dir}/$1";
+    if mkdir -p "$(dirname "${backup_dst}")" && mv "$1" "${backup_dst}"; then
+        info "Backup file: $1"
+        return 0
+    else
+        error "$1: Failed to backup file."
+        return 1
+    fi
+}
+
+# Locate configuration file.
+# Args $1: Path meet XGD base directory. $2: Default path.
+# Return: Valid path of configuration file.
+locate_config() {
+    if [ -z "$XDG_CONFIG_HOME" ]; then
+        return "$2"
+    else
+        return "$1"
+    fi
+}
+
+create_symlink() {
+    ln -s "$1" "$2" && info "Created symlink: $2 -> $1"
+}
+
 setup_home() {
     section "Setup home directory..."
 
@@ -77,16 +139,14 @@ setup_home() {
     do
         target="${HOME}/$(basename "${file}")"  # path of file installed.
 
-        if [ -e "${target}" ]; then
-            warn "${target}: already exists. Skipped."
+        if backup_file "${target}"; then
+            create_symlink "${file}" "${target}"
         else
-            ln -s "${file}" "${target}"
-            info "Created symlink: ${target} -> ${file}"
+            warn "${target}: Installation is skipped."
         fi
 
         if [ "$(basename "${file}")" = ".zshenv" ]; then
-            source "$file"
-            info "Loaded ${target}"
+            source "$file" && info "Loaded ${target}"
         fi
     done
 
@@ -98,12 +158,11 @@ setup_home() {
         target="${HOME}/${CONFIG_DIR_NAME}/${relative_path}"   # path of file installed.
         application_dir="$(dirname "${target}")"                # dirname of file installed.
 
-        if [ -e "${target}" ]; then
-            warn "${target}: already exists. Skipped."
-        else
+        if backup_file "${target}"; then
             mkdir -p "${application_dir}"
-            ln -s "${file}" "${target}"
-            info "Created symlink: ${target} -> ${file}"
+            create_symlink "${file}" "${target}"
+        else
+            warn "${target}: Installation is skipped."
         fi
     done
 }
@@ -125,7 +184,8 @@ setup_git() {
 }
 
 
-# parse_options "$@"
+parse_options "$@"
+ensure_backup_dir
 setup_home
 setup_git
 section "Installation is Completed!"
