@@ -11,7 +11,7 @@ DEFAULT_BACKUP_DIR="${HOME}/dotfiles-backup_$(date +%Y%m%d%H%M%S)"
 
 
 section() {
-    echo -e "${FONT_BOLD}${COLOR_CYAN}\n$1\n${OUTPUT_RESET}"
+    echo -e "${FONT_BOLD}${COLOR_CYAN}\n$1${OUTPUT_RESET}"
 }
 
 info() {
@@ -114,28 +114,57 @@ backup_file() {
     fi
 }
 
-# Locate configuration file.
-# Args $1: Path meet XGD base directory. $2: Default path.
-# Return: Valid path of configuration file.
-locate_config() {
-    if [ -z "$XDG_CONFIG_HOME" ]; then
-        return "$2"
-    else
-        return "$1"
+# Check specified variable is defined. if not, terminate script with error.
+defined_or_terminate() {
+    arg="$(eval "echo \"\$$1\"")"
+    if [ -z "${arg}" ]; then
+        error "$1 is not defined."
+        exit 1
     fi
 }
 
 create_symlink() {
-    ln -s "$1" "$2" && info "Created symlink: $2 -> $1"
+    ln -fs "$1" "$2" && info "Created symlink: $2 -> $1"
+}
+
+setup_zsh() {
+    section "Setup zsh..."
+
+    ### Setup .zshenv ###
+    local ZSHENV_PATH=${HOME}/.zshenv
+    if backup_file "${ZSHENV_PATH}"; then
+        create_symlink "${SCRIPT_DIR}"/zsh/.zshenv "${ZSHENV_PATH}"
+        source "${ZSHENV_PATH}" && info "Loaded ${ZSHENV_PATH}"
+    else
+        error ".zshenv must be installed to prevent installation from unexpected result. Please delete existing .zshenv before run this script or run with -b or --backup option."
+        exit 1
+    fi
+
+    ### Setup ZDOTDIR ###
+    defined_or_terminate "ZDOTDIR"
+    mkdir -p "${ZDOTDIR}"
+    local ZSHCONFIGS="${SCRIPT_DIR}"/zsh/zdotdir
+
+    find "${ZSHCONFIGS}" -type f -print0 | while IFS= read -r -d '' file
+    do
+        target="${ZDOTDIR}/$(basename "${file}")"  # path of file installed.
+
+        if backup_file "${target}"; then
+            create_symlink "${file}" "${target}"
+        else
+            warn "${target}: Installation is skipped."
+        fi
+    done
 }
 
 setup_home() {
     section "Setup home directory..."
 
     ### Setup home directory. ###
-    HOME_DIR="${SCRIPT_DIR}/home"
+    HOMECONFIGS="${SCRIPT_DIR}/home"
     CONFIG_DIR_NAME=".config"
-    find "${HOME_DIR}" -type d -name "${CONFIG_DIR_NAME}" -prune -o -type f -print0 | while IFS= read -r -d '' file
+
+    find "${HOMECONFIGS}" -type d -name "${CONFIG_DIR_NAME}" -prune -o -type f -print0 | while IFS= read -r -d '' file
     do
         target="${HOME}/$(basename "${file}")"  # path of file installed.
 
@@ -144,18 +173,16 @@ setup_home() {
         else
             warn "${target}: Installation is skipped."
         fi
-
-        if [ "$(basename "${file}")" = ".zshenv" ]; then
-            source "$file" && info "Loaded ${target}"
-        fi
     done
 
-    ### Setup XDG_CONFIG_HOME ($HOME/.config). ###
-    CONFIG_DIR="${HOME_DIR}/${CONFIG_DIR_NAME}"
+    ### Setup XDG_CONFIG_HOME ###
+    defined_or_terminate "XDG_CONFIG_HOME"
+    CONFIG_DIR="${HOMECONFIGS}/${CONFIG_DIR_NAME}"
+
     find "${CONFIG_DIR}" -type f -print0 | while IFS= read -r -d '' file
     do
         relative_path="${file##"${CONFIG_DIR}/"}"               # relative path from "home/.config"
-        target="${HOME}/${CONFIG_DIR_NAME}/${relative_path}"   # path of file installed.
+        target="${XDG_CONFIG_HOME}/${relative_path}"   # path of file installed.
         application_dir="$(dirname "${target}")"                # dirname of file installed.
 
         if backup_file "${target}"; then
@@ -186,6 +213,7 @@ setup_git() {
 
 parse_options "$@"
 ensure_backup_dir
+setup_zsh
 setup_home
 setup_git
 section "Installation is Completed!"
