@@ -105,7 +105,7 @@ backup_file() {
     fi
 
     local backup_dst="${backup_dir}/$1";
-    if mkdir -p "$(dirname "${backup_dst}")" && mv "$1" "${backup_dst}"; then
+    if mkdir -p "$(dirname "${backup_dst}")" && cp "$1" "${backup_dst}"; then
         info "Backup file: $1"
         return 0
     else
