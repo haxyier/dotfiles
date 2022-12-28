@@ -95,6 +95,8 @@ ensure_backup_dir() {
 
 # If --backup or -b option is specified, move file to backup directory.
 # Args $1: file path to execute backup. 
+# Returns:  0: Backup is completed.
+#           1: Backup is not done.
 backup_file() {
     if [ ! -e "$1" ]; then
         return 0
@@ -210,9 +212,31 @@ setup_git() {
     git config --global user.email "${email:-$default_email}"
 }
 
+setup_external_conf() {
+    section "Setup external config..."
+
+    defined_or_terminate "XDG_CONFIG_HOME"
+    EXTERNAL_CONFIG_DIR="${SCRIPT_DIR}/external"
+
+    find "${EXTERNAL_CONFIG_DIR}" -type f -print0 | while IFS= read -r -d '' file
+    do
+        relative_path="${file##"${EXTERNAL_CONFIG_DIR}/"}"  # relative path from "external/"
+        target="${XDG_CONFIG_HOME}/external/${relative_path}"   # path of file installed.
+        application_dir="$(dirname "${target}")"                # dirname of file installed.
+
+        if backup_file "${target}"; then
+            mkdir -p "${application_dir}"
+            create_symlink "${file}" "${target}"
+        else
+            warn "${target}: Installation is skipped."
+        fi
+    done
+}
+
 
 parse_options "$@"
 ensure_backup_dir
+setup_external_conf
 setup_zsh
 setup_home
 setup_git
