@@ -1,5 +1,7 @@
+# shellcheck disable=SC2034,SC2154
+
 ### Set environment variables. ###
-export PATH=/opt/homebrew/bin:$PATH:/opt/platform-tools
+export PATH=/opt/homebrew/bin:$PATH
 export CLICOLOR=1
 export LESS="-FiMqRX"
 export LSCOLORS=gxfxcxdxcxegedabagfxfx
@@ -124,3 +126,11 @@ function format_prompt() {
 }
 
 PROMPT=$(format_prompt)
+
+
+### Load external configrations. ###
+
+EXTERNAL_CONFIG_DIR="${XDG_CONFIG_HOME}/external"
+EXTERNAL_ZSHRC="${EXTERNAL_CONFIG_DIR}/zsh/.zshrc"
+
+[ -r "${EXTERNAL_ZSHRC}" ] && source "${EXTERNAL_ZSHRC}"
