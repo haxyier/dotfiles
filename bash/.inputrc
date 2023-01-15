@@ -1,0 +1,6 @@
+set bell-style none
+set colored-stats on
+set completion-ignore-case on
+
+"\e[A":history-search-backward
+"\e[B":history-search-forward
