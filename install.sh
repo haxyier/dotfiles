@@ -32,7 +32,8 @@ parse_options() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             # Parse long options.
-            --backup) BACKUP_ENABLED=true; BACKUP_PATH=$2; shift; shift;;
+            --backup) BACKUP_ENABLED=true; [[ ! $2 =~ ^- ]] && BACKUP_PATH=$2 && shift; shift;;
+            --shell)  SHELL_SPECIFIED=true; [[ ! $2 =~ ^- ]] && SELECTED_SHELL=$2 && shift; shift;;
 
             # Quit parsing options.
             --) shift; positional_params+=("$@"); set --;;
@@ -54,6 +55,14 @@ parse_options() {
                                 BACKUP_PATH=$2; shift
                             fi;;
 
+                        -s)
+                            SHELL_SPECIFIED=true
+
+                            # Parse option argument if the option is last one.
+                            if [[ $((i + 1)) -eq ${arg_count} && ! $2 =~ ^- ]]; then
+                                SELECTED_SHELL=$2; shift
+                            fi;;
+
                         # In case it does not match any short options.
                         *) error "Invalid option: -${options:$i:1}"; exit 1;;
                      esac
@@ -66,6 +75,14 @@ parse_options() {
     done
 
     set -- "${positional_params[@]}"
+
+    # Check args.
+    if [ "${SHELL_SPECIFIED}" ]; then
+        if [[ ! "${SELECTED_SHELL}" =~ ^(bash|zsh)$ ]]; then
+            error "Invalid option: --shell or -s option is must be provided value of \"bash\" or \"zsh\"."
+            exit 1
+        fi
+    fi
 }
 
 ensure_backup_dir() {
@@ -129,6 +146,33 @@ create_symlink() {
     ln -fs "$1" "$2" && info "Created symlink: $2 -> $1"
 }
 
+setup_shell() {
+    section "Setup shell..."
+
+    if [ "${SELECTED_SHELL}" = "bash" ]; then
+        info "bash is selected for default shell."
+        target_shell="bash"
+        setup_bash
+    elif [ "${SELECTED_SHELL}" = "zsh" ]; then
+        info "zsh is selected for default shell."
+        target_shell="zsh"
+        setup_zsh
+    else
+        if [[ "${SHELL}" =~ bash$ ]]; then
+            info "Detected login shell is bash."
+            target_shell="bash"
+            setup_bash
+        elif [[ "${SHELL}" =~ zsh$ ]]; then
+            info "Detected login shell is zsh."
+            target_shell="zsh"
+            setup_zsh
+        else
+            error "Could not detect login shell, or current login shell is not supported."
+            exit 1
+        fi
+    fi
+}
+
 setup_zsh() {
     section "Setup zsh..."
 
@@ -157,6 +201,43 @@ setup_zsh() {
             warn "${target}: Installation is skipped."
         fi
     done
+}
+
+setup_bash() {
+    section "Setup bash..."
+
+    ### Setup .bashrc ###
+    local BASHPROFILE_PATH=${HOME}/.bash_profile
+    if backup_file "${BASHPROFILE_PATH}"; then
+        create_symlink "${SCRIPT_DIR}"/bash/.bash_profile "${BASHPROFILE_PATH}"
+        if source "${BASHPROFILE_PATH}"; then
+            info "Loaded file: ${BASHPROFILE_PATH}"
+        else
+            error ".bash_profile must be installed to prevent installation from unexpected result. Please delete existing .bash_profile before run this script or run with -b or --backup option.";
+            exit 1
+        fi
+    else
+        error ".bash_profile must be installed to prevent installation from unexpected result. Please delete existing .bash_profile before run this script or run with -b or --backup option.";
+        exit 1
+    fi
+
+    # Setup other config in home directory.
+    find "${SCRIPT_DIR}/bash" -type f -print0 | while IFS= read -r -d '' file
+    do
+        if [ "$(basename "${file}")" = ".bash_profile" ]; then
+            continue
+        fi
+
+        target="${HOME}/$(basename "${file}")"  # path of file installed.
+
+        if backup_file "${target}"; then
+            create_symlink "${file}" "${target}"
+        else
+            warn "${target}: Installation is skipped."
+        fi
+    done
+
+    mkdir -p "${XDG_STATE_HOME}"/bash && info "Created directory: ${XDG_STATE_HOME}/bash"
 }
 
 setup_home() {
@@ -210,6 +291,18 @@ setup_git() {
 
     git config --global user.name "${name:-$default_name}"
     git config --global user.email "${email:-$default_email}"
+
+    mkdir -p "${HOME}/.git"
+
+    info "Check git-prompt.sh"
+    [ -f "${HOME}/.git/.git-prompt.sh" ] || curl -o "${HOME}/.git/.git-prompt.sh" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"
+
+    info "Check git-completion"
+    if [ $target_shell = "bash" ]; then
+        [ -f "${HOME}/.git/.git-completion.bash" ] || curl -o "${HOME}/.git/.git-completion.bash" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash"
+    elif [ $target_shell = "zsh" ]; then
+        [ -f "${HOME}/.git/_git" ] || curl -o "${HOME}/.git/_git" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.zsh"
+    fi
 }
 
 setup_external_conf() {
@@ -236,8 +329,8 @@ setup_external_conf() {
 
 parse_options "$@"
 ensure_backup_dir
+setup_shell
 setup_external_conf
-setup_zsh
 setup_home
 setup_git
 section "Installation is Completed!"
