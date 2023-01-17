@@ -210,12 +210,8 @@ setup_bash() {
     local BASHPROFILE_PATH=${HOME}/.bash_profile
     if backup_file "${BASHPROFILE_PATH}"; then
         create_symlink "${SCRIPT_DIR}"/bash/.bash_profile "${BASHPROFILE_PATH}"
-        if source "${BASHPROFILE_PATH}"; then
-            info "Loaded file: ${BASHPROFILE_PATH}"
-        else
-            error ".bash_profile must be installed to prevent installation from unexpected result. Please delete existing .bash_profile before run this script or run with -b or --backup option.";
-            exit 1
-        fi
+        source "${BASHPROFILE_PATH}"
+        info "Loaded file: ${BASHPROFILE_PATH}"
     else
         error ".bash_profile must be installed to prevent installation from unexpected result. Please delete existing .bash_profile before run this script or run with -b or --backup option.";
         exit 1
@@ -237,6 +233,7 @@ setup_bash() {
         fi
     done
 
+    defined_or_terminate "XDG_STATE_HOME"
     mkdir -p "${XDG_STATE_HOME}"/bash && info "Created directory: ${XDG_STATE_HOME}/bash"
 }
 
@@ -295,11 +292,11 @@ setup_git() {
     mkdir -p "${HOME}/.git"
 
     info "Check git-prompt.sh"
-    [ -f "${HOME}/.git/.git-prompt.sh" ] || curl -o "${HOME}/.git/.git-prompt.sh" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"
+    [ -f "${HOME}/.git/git-prompt.sh" ] || curl -o "${HOME}/.git/git-prompt.sh" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"
 
     info "Check git-completion"
     if [ $target_shell = "bash" ]; then
-        [ -f "${HOME}/.git/.git-completion.bash" ] || curl -o "${HOME}/.git/.git-completion.bash" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash"
+        [ -f "${HOME}/.git/git-completion.bash" ] || curl -o "${HOME}/.git/git-completion.bash" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash"
     elif [ $target_shell = "zsh" ]; then
         [ -f "${HOME}/.git/_git" ] || curl -o "${HOME}/.git/_git" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.zsh"
     fi
