@@ -85,6 +85,22 @@ parse_options() {
     fi
 }
 
+detect_os() {
+    section "Detect OS..."
+
+    # Detect if running on Windows.
+    uname_str=$(uname | tr '[:upper:]' '[:lower:]')
+
+    if [[ $uname_str = "mingw"* || $uname_str = "cygwin"* || $uname_str = "msys"* ]]; then
+        OS="windows"
+        # Enable symbolic link.
+        export MSYS=winsymlinks:nativestrict
+        info "Detected running on Windows."
+    else
+        info "Detected not running on Windows."
+    fi
+}
+
 ensure_backup_dir() {
     section "Ensure backup directory..."
 
@@ -289,16 +305,18 @@ setup_git() {
     git config --global user.name "${name:-$default_name}"
     git config --global user.email "${email:-$default_email}"
 
-    mkdir -p "${HOME}/.git"
+    if [ "$OS" != "windows" ]; then
+        mkdir -p "${HOME}/.git"
 
-    info "Check git-prompt.sh"
-    [ -f "${HOME}/.git/git-prompt.sh" ] || curl -o "${HOME}/.git/git-prompt.sh" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"
+        info "Check git-prompt.sh"
+        [ -f "${HOME}/.git/git-prompt.sh" ] || curl -o "${HOME}/.git/git-prompt.sh" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-prompt.sh"
 
-    info "Check git-completion"
-    if [ $target_shell = "bash" ]; then
-        [ -f "${HOME}/.git/git-completion.bash" ] || curl -o "${HOME}/.git/git-completion.bash" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash"
-    elif [ $target_shell = "zsh" ]; then
-        [ -f "${HOME}/.git/_git" ] || curl -o "${HOME}/.git/_git" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.zsh"
+        info "Check git-completion"
+        if [ $target_shell = "bash" ]; then
+            [ -f "${HOME}/.git/git-completion.bash" ] || curl -o "${HOME}/.git/git-completion.bash" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.bash"
+        elif [ $target_shell = "zsh" ]; then
+            [ -f "${HOME}/.git/_git" ] || curl -o "${HOME}/.git/_git" "https://raw.githubusercontent.com/git/git/master/contrib/completion/git-completion.zsh"
+        fi
     fi
 }
 
@@ -325,6 +343,7 @@ setup_external_conf() {
 
 
 parse_options "$@"
+detect_os
 ensure_backup_dir
 setup_shell
 setup_external_conf

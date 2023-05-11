@@ -54,8 +54,8 @@ right_arrow_fg1="\e[38;5;${name_host_bg_color}m"
 right_arrow_fg2="\e[38;5;${path_bg_color}m"
 right_arrow_fg3="\e[38;5;${branch_bg_color}m"
 
-right_arrow="\uE0B0"
-branch_icon="\uE0A0 "
+right_arrow=""
+branch_icon=" "
 reset='\e[0m'
 
 function get_branch_or_blank() {
@@ -71,7 +71,7 @@ function format_prompt() {
     # username@hostname
     prompt_str="${name_host_bg}${name_host_fg} \u@\h ${path_bg}${right_arrow_fg1}${right_arrow} "
     # current directory
-    prompt_str+="${path_bg}${path_fg}\$(pwd | sed -e "s@^$HOME@~@" | sed -e 's@^/@@' | sed -e 's@/@ \\uE0B1 @g') ${reset}"
+    prompt_str+="${path_bg}${path_fg}\$(pwd | sed -e "s@^$HOME@~@" | sed -e 's@^/@@' | sed -e 's@/@  @g') ${reset}"
     # current branch
     prompt_str+="\$(get_branch_or_blank)"
 
@@ -81,6 +81,13 @@ function format_prompt() {
 
 PS1=$(format_prompt)
 
+### Windows specific configurations. ###
+uname_str=$(uname | tr '[:upper:]' '[:lower:]')
+
+if [[ $uname_str = "mingw"* || $uname_str = "cygwin"* || $uname_str = "msys"* ]]; then
+    # Enable symbolic link.
+    export MSYS=winsymlinks:nativestrict
+fi
 
 ### Load external configrations. ###
 EXTERNAL_CONFIG_DIR="${XDG_CONFIG_HOME}/external"
