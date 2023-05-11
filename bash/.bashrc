@@ -54,8 +54,8 @@ right_arrow_fg1="\e[38;5;${name_host_bg_color}m"
 right_arrow_fg2="\e[38;5;${path_bg_color}m"
 right_arrow_fg3="\e[38;5;${branch_bg_color}m"
 
-right_arrow=""
-branch_icon=" "
+right_arrow="" # \uE0B0
+branch_icon=" " # \uE0A0
 reset='\e[0m'
 
 function get_branch_or_blank() {
