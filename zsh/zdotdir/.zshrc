@@ -15,7 +15,7 @@ alias lla='ls -ahl'
 
 
 ### Set zsh options. ###
-setopt correct
+setopt correct      # correct typo.
 setopt nobeep
 setopt nohistbeep
 setopt nolistbeep
@@ -47,16 +47,18 @@ fi
 
 
 ### Configure complement. ###
-setopt auto_list
-setopt auto_menu
-setopt list_packed
-setopt list_types
-setopt magic_equal_subst
+setopt auto_list            # Display completion list.
+setopt auto_menu            # Select completion pressing tab key.
+setopt list_packed          # Narrowing the spacing of completion candidates
+setopt list_types           # Show file types in completion list.
+setopt magic_equal_subst    # Enable completion of path after equal.
 
 FPATH=~/.zsh:$FPATH
 autoload -Uz compinit && compinit
 
+# Display completion list in color.
 zstyle ':completion:*' list-colors "${LS_COLORS}"
+# If completion candidates are not found, convert lowercase to uppercase. In case still cannot find it, convert uppercase to lowercase.
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' '+m:{A-Z}={a-z}' 
 
 
@@ -65,12 +67,12 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}' '+m:{A-Z}={a-z}'
 HISTFILE=$XDG_CONFIG_HOME/zsh/.zsh_history
 HISTSIZE=1000
 SAVEHIST=100000
-setopt inc_append_history
-setopt share_history
+setopt inc_append_history   # Append history file immediately.
+setopt share_history        # Share history file immediately.
 
 # directory
 DIRSTACKSIZE=100
-setopt auto_pushd
+setopt auto_pushd           # Make cd push the old directory onto the directory stack.
 setopt pushd_ignore_dups
 
 # Search history from current buffer.
@@ -91,37 +93,51 @@ GIT_PS1_SHOWUPSTREAM=auto
 
 setopt prompt_subst
 
+# prompt appearance
+name_host_fg_color='255'    # text color (username and hostname)
+name_host_bg_color='055'    # background color (username and hostname)
+path_fg_color='000'         # text color (current directory)
+path_bg_color='079'         # background color (current directory)
+branch_fg_color='000'       # text color (branch name)
+branch_bg_color='220'       # background color (branch name)
+
+name_host_fg="%{\e[38;5;${name_host_fg_color}m%}"
+name_host_bg="%{\e[30;48;5;${name_host_bg_color}m%}"
+
+right_arrow_fg1="%{\e[38;5;${name_host_bg_color}m%}"
+
+path_fg="%{\e[38;5;${path_fg_color}m%}"
+path_bg="%{\e[30;48;5;${path_bg_color}m%}"
+
+right_arrow_fg2="%{\e[38;5;${path_bg_color}m%}"
+
+branch_fg="%{\e[38;5;${branch_fg_color}m%}"
+branch_bg="%{\e[30;48;5;${branch_bg_color}m%}"
+
+right_arrow_fg3="%{\e[38;5;${branch_bg_color}m%}"
+
+right_arrow="\uE0B0"
+branch_icon="\uE0A0 "
+reset='%{\e[0m%}'
+
+function get_branch_or_blank() {
+    branch_name=$(__git_ps1 %s)
+    if [ -n "${branch_name}" ]; then
+        echo -e "${branch_bg}${right_arrow_fg2}${right_arrow} ${branch_bg}${branch_fg}${branch_icon}${branch_name} ${reset}${right_arrow_fg3}${right_arrow}${reset}"
+    else
+        echo -e "${right_arrow_fg2}${right_arrow}${reset}"
+    fi
+}
+
 function format_prompt() {
-    name_host_fg_color='255'    # text color (username and hostname)
-    name_host_bg_color='055'    # background color (username and hostname)
-    path_fg_color='000'         # text color (current directory)
-    path_bg_color='079'         # background color (current directory)
-    branch_fg_color='000'       # text color (branch name)
-    branch_bg_color='220'       # background color (branch name)
+    # username@hostname
+    prompt_str="${name_host_bg}${name_host_fg} %n@%m ${path_bg}${right_arrow_fg1}${right_arrow} "
+    # current directory
+    prompt_str+="${path_bg}${path_fg}\$(pwd | sed -e "s@^$HOME@~@" | sed -e 's@^/@@' | sed -e 's@/@  @g') ${reset}"
+    # current branch
+    prompt_str+="\$(get_branch_or_blank)"
 
-    name_host_fg="%{\e[38;5;${name_host_fg_color}m%}"    
-    name_host_bg="%{\e[30;48;5;${name_host_bg_color}m%}"
-
-    right_arrow_fg1="%{\e[38;5;${name_host_bg_color}m%}"
-
-    path_fg="%{\e[38;5;${path_fg_color}m%}"
-    path_bg="%{\e[30;48;5;${path_bg_color}m%}"
-
-    right_arrow_fg2="%{\e[38;5;${path_bg_color}m%}"
-
-    branch_fg="%{\e[38;5;${branch_fg_color}m%}"
-    branch_bg="%{\e[30;48;5;${branch_bg_color}m%}"
-
-    right_arrow_fg3="%{\e[38;5;${branch_bg_color}m%}"
-
-    right_arrow="\uE0B0"
-    branch="\uE0A0 "
-    reset='%{\e[0m%}'
-
-    prompt_str="${name_host_bg}${name_host_fg} %n@%m ${path_bg}${right_arrow_fg1}${right_arrow} "                       # username@hostname
-    prompt_str+="${path_bg}${path_fg}%~ ${reset}${branch_bg}${right_arrow_fg2}${right_arrow} "                          # current directory
-    prompt_str+="${branch_bg}${branch_fg}\$(__git_ps1 '${branch}'%s) ${reset}${right_arrow_fg3}${right_arrow}${reset}"  # current branch
-    echo "${prompt_str}"
+    echo -e "\n${prompt_str}"
     echo "%# "
 }
 
