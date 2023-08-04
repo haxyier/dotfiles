@@ -8,6 +8,7 @@ OUTPUT_RESET="\033[0m"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DEFAULT_BACKUP_DIR="${HOME}/dotfiles-backup_$(date +%Y%m%d%H%M%S)"
+TMP_DIR="/tmp/dotfiles"
 
 
 section() {
@@ -24,6 +25,20 @@ warn() {
 
 error() {
     echo -e "${FONT_BOLD}${COLOR_RED}[ERROR]   $1${OUTPUT_RESET}"
+}
+
+# Check specified variable is defined. if not, terminate script with error.
+defined_or_terminate() {
+    arg="$(eval "echo \"\$$1\"")"
+    if [ -z "${arg}" ]; then
+        error "$1 is not defined."
+        exit 1
+    fi
+}
+
+# Convert Linux path to Windows path.
+convert_to_win_path() {
+    echo "$1" | sed 's@^/\([a-zA-z]\)@\U\1:@' | sed 's@/@\\@g'
 }
 
 parse_options() {
@@ -95,6 +110,10 @@ detect_os() {
         OS="windows"
         # Enable symbolic link.
         export MSYS=winsymlinks:nativestrict
+
+        defined_or_terminate "TMP"
+        TMP_DIR="${TMP}/dotfiles"
+
         info "Detected running on Windows."
     else
         info "Detected not running on Windows."
@@ -149,15 +168,6 @@ backup_file() {
     fi
 }
 
-# Check specified variable is defined. if not, terminate script with error.
-defined_or_terminate() {
-    arg="$(eval "echo \"\$$1\"")"
-    if [ -z "${arg}" ]; then
-        error "$1 is not defined."
-        exit 1
-    fi
-}
-
 create_symlink() {
     ln -fs "$1" "$2" && info "Created symlink: $2 -> $1"
 }
@@ -187,6 +197,32 @@ setup_shell() {
             exit 1
         fi
     fi
+
+    info "Downloading fonts..."
+
+    meslo_lg_s_bi="${TMP_DIR}/font/Meslo_LG_S_Bold_Italic_for_Powerline.ttf"
+    meslo_lg_s_b="${TMP_DIR}/font/Meslo_LG_S_Bold_for_Powerline.ttf"
+    meslo_lg_s_i="${TMP_DIR}/font/Meslo_LG_S_Italic_for_Powerline.ttf"
+    meslo_lg_s_r="${TMP_DIR}/font/Meslo_LG_S_Regular_for_Powerline.ttf"
+
+    mkdir -p "${TMP_DIR}/font"
+    curl -o "$meslo_lg_s_bi" "https://raw.githubusercontent.com/powerline/fonts/master/Meslo%20Slashed/Meslo%20LG%20S%20Bold%20Italic%20for%20Powerline.ttf"
+    curl -o "$meslo_lg_s_b" "https://raw.githubusercontent.com/powerline/fonts/master/Meslo%20Slashed/Meslo%20LG%20S%20Bold%20for%20Powerline.ttf"
+    curl -o "$meslo_lg_s_i" "https://raw.githubusercontent.com/powerline/fonts/master/Meslo%20Slashed/Meslo%20LG%20S%20Italic%20for%20Powerline.ttf"
+    curl -o "$meslo_lg_s_r" "https://raw.githubusercontent.com/powerline/fonts/master/Meslo%20Slashed/Meslo%20LG%20S%20Regular%20for%20Powerline.ttf"
+    
+    info "Installing fonts..."
+
+    if [ "$OS" = "windows" ]; then
+        ${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_bi")"
+        ${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_b")"
+        ${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_i")"
+        ${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_r")"
+    else
+        info "Currently only Windows is supported. Installation is Skipped."
+    fi
+
+    rm -rf "${TMP_DIR}/font"
 }
 
 setup_zsh() {
