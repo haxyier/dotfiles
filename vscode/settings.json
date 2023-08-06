@@ -1,0 +1,97 @@
+{
+    // editor
+    "editor.accessibilitySupport": "off",
+    "editor.cursorWidth": 16,
+    "editor.fontSize": 16,
+    "editor.minimap.enabled": false,
+    "editor.quickSuggestions": {
+        "other": true,
+        "comments": false,
+        "strings": false
+    },
+    "editor.renderControlCharacters": true,
+    "editor.renderWhitespace": "all",
+    "editor.renderLineHighlight": "all",
+    "editor.stickyScroll.enabled": true,
+    "editor.suggestSelection": "first",
+    "editor.unicodeHighlight.ambiguousCharacters": false,
+    "editor.unicodeHighlight.invisibleCharacters": false,
+    "editor.unicodeHighlight.nonBasicASCII": false,
+
+    // files
+    "files.autoGuessEncoding": true,
+    "files.eol": "\n",
+    "files.exclude": {
+        "**/__pycache__": true,
+    },
+    "files.insertFinalNewline": true,
+
+    // terminal
+    "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "terminal.integrated.fontFamily": "'Meslo LG S DZ for Powerline', Consolas, 'Courier New', monospace",
+    "terminal.integrated.fontSize": 15,
+    "terminal.integrated.profiles.windows": {
+        //"Bash(Git)": {
+        //    "source": "Git Bash",
+        //    "args": ["-l"],
+        //    "overrideName": true,
+        //}
+    },
+
+    // appearances
+    "workbench.colorCustomizations": {
+        "activityBar.background": "#73990b6f",
+        "activityBarBadge.background": "#302f2f",
+        "editorCursor.foreground": "#3d9b77",
+        "editor.lineHighlightBackground": "#352e4a",
+        "editor.selectionBackground": "#62866886",
+        "list.activeSelectionBackground": "#e78f2a",
+        "list.inactiveSelectionBackground": "#b1824d",
+        "tab.activeBorder": "#3d9b77",
+        "titleBar.activeBackground": "#73990b6f"
+    },
+
+    // others
+    "bookmarks.backgroundLineColor": "rgba(182,242,233,0.3)",
+    "diffEditor.ignoreTrimWhitespace": false,
+    "extensions.ignoreRecommendations": true,
+    "http.proxyStrictSSL": false,
+    "search.showLineNumbers": true,
+    "security.workspace.trust.untrustedFiles": "open",
+    "vsintellicode.modify.editor.suggestSelection": "choseToUpdateConfiguration",
+    "workbench.editor.tabSizing": "shrink",
+    "workbench.iconTheme": "material-icon-theme",
+
+    // Language Specific Configurations
+    "[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+
+    // Extensions
+    "code-eol.color": "#566a6c",
+    "shellcheck.exclude": [
+        "1090"
+    ],
+
+    // Java
+    /*
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-xx",
+            "path": "/path/to/jdk",
+            "default": true
+        }
+    ],
+    "java.jdt.ls.java.home": "/path/to/JAVA_HOME",
+    */
+
+    // Python
+    "python.formatting.provider": "yapf",
+    // "python.pythonPath": "/path/to/python",
+}

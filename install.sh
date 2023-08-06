@@ -320,6 +320,30 @@ setup_git() {
     fi
 }
 
+setup_vscode() {
+    # TODO: detect vscode is installed or not.
+
+    section "Setup vscode config..."
+
+    info "Installing extensions."
+    # TODO: install extension.
+    # code --install-extension <name>
+
+    if [ "$OS" = "windows" ]; then
+        # TODO: detect per-user install or system-wide install
+        CODE_SETTINGS_PATH="${USERPROFILE}/AppData/Roaming/Code/User/settings.json"
+    # TODO: detect macos.
+    elif [ "$OS" = "macos" ]; then
+        CODE_SETTINGS_PATH="${HOME}/Library/Application Support/Code/User/settings.json"
+    fi
+
+    if backup_file $CODE_SETTINGS_PATH; then
+        create_symlink "${SCRIPT_DIR}/vscode/settings.json" "${CODE_SETTINGS_PATH}"
+    else
+        warn "${CODE_SETTINGS_PATH}: Installation is skipped."
+    fi
+}
+
 setup_external_conf() {
     section "Setup external config..."
 
