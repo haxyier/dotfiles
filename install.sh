@@ -365,6 +365,36 @@ setup_git() {
     fi
 }
 
+setup_vscode() {
+    section "Setup vscode config..."
+
+    if ! code --version; then
+        info "code command is failed or not found. Installtion is skipped."
+        return 0
+    fi
+
+    info "Installing extensions."
+    # shellcheck disable=SC2002
+    cat "${SCRIPT_DIR}/vscode/extensions.txt" | while IFS= read -r extension
+    do
+        code --install-extension "${extension}"
+    done
+
+    if [ "$OS" = "windows" ]; then
+        # TODO: detect per-user install or system-wide install
+        CODE_SETTINGS_PATH="${USERPROFILE}/AppData/Roaming/Code/User/settings.json"
+    # TODO: detect macos.
+    elif [ "$OS" = "macos" ]; then
+        CODE_SETTINGS_PATH="${HOME}/Library/Application Support/Code/User/settings.json"
+    fi
+
+    if backup_file "$CODE_SETTINGS_PATH"; then
+        create_symlink "${SCRIPT_DIR}/vscode/settings.json" "${CODE_SETTINGS_PATH}"
+    else
+        warn "${CODE_SETTINGS_PATH}: Installation is skipped."
+    fi
+}
+
 setup_external_conf() {
     section "Setup external config..."
 
@@ -375,7 +405,7 @@ setup_external_conf() {
         info "External config is not found. Installation is skipped."
         return 0
     fi
-    
+
     find "${EXTERNAL_CONFIG_DIR}" -type f -print0 | while IFS= read -r -d '' file
     do
         relative_path="${file##"${EXTERNAL_CONFIG_DIR}/"}"  # relative path from "external/"
@@ -399,4 +429,5 @@ setup_shell
 setup_external_conf
 setup_home
 setup_git
+setup_vscode
 section "Installation is Completed!"
