@@ -9,6 +9,7 @@ export LS_COLORS='di=36:ln=35:so=32:pi=33:ex=32:bd=46;34:cd=43;34:su=41;30:sg=46
 export XDG_CONFIG_HOME=$HOME/.config
 
 ### Configure alias. ###
+alias ls='ls --color'
 alias la='ls -a'
 alias ll='ls -hl'
 alias lla='ls -ahl'
@@ -85,7 +86,7 @@ zle -N down-line-or-beginning-search
 
 
 ### Format prompt style. ###
-source ~/.zsh/git-prompt.sh
+source ~/.git/git-prompt.sh
 GIT_PS1_SHOWDIRTYSTATE=true
 GIT_PS1_SHOWUNTRACKEDFILES=true
 GIT_PS1_SHOWSTASHSTATE=true

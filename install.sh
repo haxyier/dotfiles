@@ -371,6 +371,11 @@ setup_external_conf() {
     defined_or_terminate "XDG_CONFIG_HOME"
     EXTERNAL_CONFIG_DIR="${SCRIPT_DIR}/external"
 
+    if [ ! -d "$EXTERNAL_CONFIG_DIR" ]; then
+        info "External config is not found. Installation is skipped."
+        return 0
+    fi
+    
     find "${EXTERNAL_CONFIG_DIR}" -type f -print0 | while IFS= read -r -d '' file
     do
         relative_path="${file##"${EXTERNAL_CONFIG_DIR}/"}"  # relative path from "external/"
