@@ -41,6 +41,11 @@ convert_to_win_path() {
     echo "$1" | sed 's@^/\([a-zA-z]\)@\U\1:@' | sed 's@/@\\@g'
 }
 
+# Convert Windows path to Linux path.
+convert_to_linux_path() {
+    echo "$1" | sed 's@^\([a-zA-Z]\):@/\L\1@' | sed 's@\\@/@g'
+}
+
 parse_options() {
     local positional_params=()
 
@@ -111,8 +116,12 @@ detect_os() {
         # Enable symbolic link.
         export MSYS=winsymlinks:nativestrict
 
-        defined_or_terminate "TMP"
-        TMP_DIR="${TMP}/dotfiles"
+        if [ "$("${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "Test-Path env:TMP")" = "True" ]; then
+            TMP_DIR=$(convert_to_linux_path "$("${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "(Get-ChildItem env:TMP).Value")")
+        else
+            error "Cloud not locate temporary directory. Check TMP environment variable."
+            exit 1
+        fi
 
         info "Detected running on Windows."
     else
@@ -214,10 +223,10 @@ setup_shell() {
     info "Installing fonts..."
 
     if [ "$OS" = "windows" ]; then
-        ${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_bi")"
-        ${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_b")"
-        ${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_i")"
-        ${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_r")"
+        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_bi")"
+        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_b")"
+        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_i")"
+        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_r")"
     else
         info "Currently only Windows is supported. Installation is Skipped."
     fi
