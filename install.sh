@@ -124,8 +124,14 @@ detect_os() {
         fi
 
         info "Detected running on Windows."
+    elif [[ $uname_str = "darwin" ]]; then
+        OS="macos"
+        info "Detected running on MacOS."
+    elif [[ $uname_str = "linux" ]]; then
+        OS="linux"
+        info "Detected running on Linux."
     else
-        info "Detected not running on Windows."
+        warn "Cannot detect OS. uname: ${uname_str}"
     fi
 }
 
@@ -373,17 +379,19 @@ setup_vscode() {
         return 0
     fi
 
-    info "Installing extensions."
-    # shellcheck disable=SC2002
-    cat "${SCRIPT_DIR}/vscode/extensions.txt" | while IFS= read -r extension
-    do
-        code --install-extension "${extension}"
-    done
+    # If it's running on MacOS, extension is installed by homebrew.
+    if [ "$OS" = "windows" ]; then
+        info "Installing extensions."
+        # shellcheck disable=SC2002
+        cat "${SCRIPT_DIR}/vscode/extensions.txt" | while IFS= read -r extension
+        do
+            code --install-extension "${extension}"
+        done
+    fi
 
     if [ "$OS" = "windows" ]; then
         # TODO: detect per-user install or system-wide install
         CODE_SETTINGS_PATH="${USERPROFILE}/AppData/Roaming/Code/User/settings.json"
-    # TODO: detect macos.
     elif [ "$OS" = "macos" ]; then
         CODE_SETTINGS_PATH="${HOME}/Library/Application Support/Code/User/settings.json"
     fi
