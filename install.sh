@@ -233,8 +233,10 @@ setup_shell() {
         "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_b")"
         "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_i")"
         "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_r")"
+    elif [ "$OS" = "macos" ]; then
+        cp "${TMP_DIR}/font/*" "${HOME}/Library/Fonts/"
     else
-        info "Currently only Windows is supported. Installation is Skipped."
+        info "Currently only Windows and MacOS is supported. Installation is Skipped."
     fi
 
     rm -rf "${TMP_DIR}/font"
