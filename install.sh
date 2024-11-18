@@ -234,7 +234,7 @@ setup_shell() {
         "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_i")"
         "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_r")"
     elif [ "$OS" = "macos" ]; then
-        cp "${TMP_DIR}/font/*" "${HOME}/Library/Fonts/"
+        cp -r "${TMP_DIR}/font/." "${HOME}/Library/Fonts/"
     else
         info "Currently only Windows and MacOS is supported. Installation is Skipped."
     fi
@@ -249,6 +249,7 @@ setup_zsh() {
     local ZSHENV_PATH=${HOME}/.zshenv
     if backup_file "${ZSHENV_PATH}"; then
         create_symlink "${SCRIPT_DIR}"/zsh/.zshenv "${ZSHENV_PATH}"
+        # shellcheck disable=SC1090
         source "${ZSHENV_PATH}" && info "Loaded ${ZSHENV_PATH}"
     else
         error ".zshenv must be installed to prevent installation from unexpected result. Please delete existing .zshenv before run this script or run with -b or --backup option."
@@ -279,6 +280,7 @@ setup_bash() {
     local BASHPROFILE_PATH=${HOME}/.bash_profile
     if backup_file "${BASHPROFILE_PATH}"; then
         create_symlink "${SCRIPT_DIR}"/bash/.bash_profile "${BASHPROFILE_PATH}"
+        # shellcheck disable=SC1090
         source "${BASHPROFILE_PATH}"
         info "Loaded file: ${BASHPROFILE_PATH}"
     else
@@ -341,6 +343,24 @@ setup_home() {
             warn "${target}: Installation is skipped."
         fi
     done
+}
+
+setup_package() {
+    section "Setup package..."
+
+    if [ "$OS" = "macos" ]; then
+        softwareupdate --install-rosetta --agree-to-license
+        setup_homebrew
+    fi
+}
+
+setup_homebrew() {
+    section "Setup Homebrew..."
+
+    export PATH=/opt/homebrew/bin:$PATH
+    xcode-select --install
+    curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh | bash --login
+    brew bundle --global
 }
 
 setup_git() {
@@ -438,6 +458,7 @@ ensure_backup_dir
 setup_shell
 setup_external_conf
 setup_home
+setup_package
 setup_git
 setup_vscode
 section "Installation is Completed!"

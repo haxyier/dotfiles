@@ -86,6 +86,7 @@ zle -N down-line-or-beginning-search
 
 
 ### Format prompt style. ###
+# shellcheck disable=SC1090
 source ~/.git/git-prompt.sh
 GIT_PS1_SHOWDIRTYSTATE=true
 GIT_PS1_SHOWUNTRACKEDFILES=true
@@ -150,4 +151,5 @@ PROMPT=$(format_prompt)
 EXTERNAL_CONFIG_DIR="${XDG_CONFIG_HOME}/external"
 EXTERNAL_ZSHRC="${EXTERNAL_CONFIG_DIR}/zsh/.zshrc"
 
+# shellcheck disable=SC1090
 [ -r "${EXTERNAL_ZSHRC}" ] && source "${EXTERNAL_ZSHRC}"
