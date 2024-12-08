@@ -187,6 +187,37 @@ create_symlink() {
     ln -fs "$1" "$2" && info "Created symlink: $2 -> $1"
 }
 
+setup_os_config() {
+    section "Setup OS config..."
+
+    if [ "$OS" = "macos" ]; then
+        setup_macos
+    fi
+}
+
+setup_macos() {
+    section "Setup MacOS config..."
+
+    defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true
+    defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true
+    defaults write com.apple.dock autohide -bool true
+    defaults write com.apple.finder AppleShowAllFiles -bool true
+    defaults write com.apple.finder FXDefaultSearchScope -string "SCcf"
+    defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false
+    defaults write com.apple.finder FXPreferredViewStyle -string "Nlsv"
+    defaults write com.apple.finder _FXSortFoldersFirst -bool true
+    defaults write com.apple.finder ShowPathbar -bool true
+    defaults write NSGlobalDomain ApplePressAndHoldEnabled -bool false
+    defaults write NSGlobalDomain AppleShowAllExtensions -bool true
+    defaults write NSGlobalDomain KeyRepeat -int 2
+    defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+    defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
+    defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true
+
+    killall Dock
+    killall Finder
+}
+
 setup_shell() {
     section "Setup shell..."
 
@@ -455,6 +486,7 @@ setup_external_conf() {
 parse_options "$@"
 detect_os
 ensure_backup_dir
+setup_os_config
 setup_shell
 setup_external_conf
 setup_home
