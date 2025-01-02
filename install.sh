@@ -192,6 +192,8 @@ setup_os_config() {
 
     if [ "$OS" = "macos" ]; then
         setup_macos
+    elif [ "$OS" = "windows" ]; then
+        setup_windows
     fi
 }
 
@@ -216,6 +218,11 @@ setup_macos() {
 
     killall Dock
     killall Finder
+}
+
+setup_windows() {
+    section "Setup Windows config..."
+    "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/setup.ps1")"
 }
 
 setup_shell() {
@@ -260,10 +267,10 @@ setup_shell() {
     info "Installing fonts..."
 
     if [ "$OS" = "windows" ]; then
-        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_bi")"
-        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_b")"
-        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_i")"
-        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/powershell/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_r")"
+        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_bi")"
+        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_b")"
+        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_i")"
+        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/Add-Font.ps1") -path $(convert_to_win_path "$meslo_lg_s_r")"
     elif [ "$OS" = "macos" ]; then
         cp -r "${TMP_DIR}/font/." "${HOME}/Library/Fonts/"
     else
@@ -382,6 +389,8 @@ setup_package() {
     if [ "$OS" = "macos" ]; then
         softwareupdate --install-rosetta --agree-to-license
         setup_homebrew
+    elif [ "$OS" = "windows" ]; then
+        "${SYSTEMROOT}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe" -NonInteractive -NoProfile -ExecutionPolicy RemoteSigned -c "$(convert_to_win_path "${SCRIPT_DIR}/windows/install-package.ps1")"
     fi
 }
 
@@ -427,9 +436,15 @@ setup_git() {
 setup_vscode() {
     section "Setup vscode config..."
 
-    if ! code --version; then
-        info "code command is failed or not found. Installtion is skipped."
-        return 0
+    if ! code --version > /dev/null 2>&1; then
+        if [ "$OS" = "windows" ] && [ -x "$(convert_to_linux_path "${USERPROFILE}/AppData/Local/Programs/Microsoft VS Code/bin/code")" ]; then
+            PATH="${PATH}":$(convert_to_linux_path "$USERPROFILE/AppData/Local/Programs/Microsoft VS Code/bin/")
+            export PATH
+            info "VSCode is installed. Set PATH."
+        else
+            info "code command is failed or not found. Installtion is skipped."
+            return 0
+        fi
     fi
 
     # If it's running on MacOS, extension is installed by homebrew.
@@ -444,7 +459,7 @@ setup_vscode() {
 
     if [ "$OS" = "windows" ]; then
         # TODO: detect per-user install or system-wide install
-        CODE_SETTINGS_PATH="${USERPROFILE}/AppData/Roaming/Code/User/settings.json"
+        CODE_SETTINGS_PATH=$(convert_to_linux_path "${USERPROFILE}/AppData/Roaming/Code/User/settings.json")
     elif [ "$OS" = "macos" ]; then
         CODE_SETTINGS_PATH="${HOME}/Library/Application Support/Code/User/settings.json"
     fi
